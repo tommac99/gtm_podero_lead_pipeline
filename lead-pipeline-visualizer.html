@@ -1,0 +1,762 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Podero — Lead Pipeline Visualizer</title>
+<style>
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+:root{
+  --bg:#f4f4f5;--bgc:#ffffff;--bgh:#f9f9f9;--bga:#f0f0f2;
+  --b:#e4e4e7;--bh:#d1d1d6;--bf:#a1a1aa;
+  --t:#3f3f46;--td:#a1a1aa;--tm:#71717a;--th:#18181b;
+  --ac:#2563eb;--acd:#dbeafe;--acb:#bfdbfe;
+  --gr:#16a34a;--grd:#dcfce7;--grb:#bbf7d0;
+  --rd:#dc2626;--rdd:#fee2e2;--rdb:#fecaca;
+  --or:#d97706;--ord:#fef3c7;--orb:#fde68a;
+  --pu:#7c3aed;--pud:#ede9fe;--pub:#ddd6fe;
+  --yw:#92400e;--ywd:#fef9c3;--ywb:#fef08a;
+  --fn:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;
+  --mo:'SF Mono','Fira Code','Consolas',monospace;
+  --r:8px;--rl:12px;
+  --shadow:0 1px 3px rgba(0,0,0,.07),0 1px 2px rgba(0,0,0,.04);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.04);
+}
+body{background:var(--bg);color:var(--t);font-family:var(--fn);min-height:100vh;overflow-x:hidden}
+::-webkit-scrollbar{width:5px;height:5px}
+::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--bh);border-radius:3px}
+
+/* HEADER */
+.hdr{display:flex;align-items:center;justify-content:space-between;padding:13px 24px;border-bottom:1px solid var(--b);position:sticky;top:0;background:rgba(244,244,245,.95);backdrop-filter:blur(12px);z-index:200;box-shadow:var(--shadow)}
+.hlo{display:flex;align-items:center;gap:12px}
+.logo{width:28px;height:28px;background:linear-gradient(135deg,#2563eb,#1d4ed8);border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;box-shadow:0 2px 4px rgba(37,99,235,.3)}
+.htitle{font-size:14px;font-weight:600;color:var(--th)}
+.hsub{font-size:11px;color:var(--td)}
+.hbadge{background:var(--grd);border:1px solid var(--grb);color:var(--gr);padding:2px 8px;border-radius:4px;font-size:11px;font-weight:600}
+.tabs{display:flex;gap:3px}
+.tbtn{padding:6px 13px;border-radius:var(--r);font-size:13px;cursor:pointer;border:1px solid transparent;color:var(--tm);background:none;transition:all .14s;font-family:var(--fn)}
+.tbtn:hover{background:var(--bga);color:var(--th)}
+.tbtn.on{background:#fff;border-color:var(--bh);color:var(--th);box-shadow:var(--shadow)}
+
+/* MAIN */
+.main{padding:24px;max-width:1440px;margin:0 auto}
+.view{display:none}.view.on{display:block}
+
+/* SECTION LABELS */
+.sl{font-size:10px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--td);margin-bottom:12px;display:flex;align-items:center;gap:8px}
+.sl::after{content:'';flex:1;height:1px;background:var(--b)}
+
+/* SOURCES */
+.srcs{margin-bottom:24px}
+.srcrow{display:flex;gap:7px;flex-wrap:wrap;align-items:center}
+.sch{display:flex;align-items:center;gap:6px;padding:5px 11px;border-radius:20px;font-size:12px;border:1px solid var(--b);background:#fff;color:var(--tm);transition:all .14s;box-shadow:var(--shadow)}
+.sch:hover{border-color:var(--ac);color:var(--th)}
+.sdot{width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.do{background:#2563eb}.di{background:var(--gr)}.de{background:var(--or)}.dr{background:var(--pu)}
+.sarr{color:var(--bh);font-size:18px;display:flex;align-items:center}
+.shigh{border-color:var(--ac)!important;color:var(--ac)!important;font-weight:600;background:var(--acd)!important}
+
+/* PIPELINE CARDS */
+.pflow{display:flex;align-items:stretch;gap:0;margin-bottom:4px;overflow-x:auto;padding-bottom:8px}
+.pflow::-webkit-scrollbar{height:4px}
+.pconn{display:flex;align-items:center;justify-content:center;flex-shrink:0;width:26px;padding-top:20px;color:var(--bh)}
+.sc{flex:1;min-width:170px;max-width:230px;cursor:pointer}
+.si{background:#fff;border:1px solid var(--b);border-radius:var(--rl);padding:14px;transition:all .14s;height:100%;min-height:195px;display:flex;flex-direction:column;box-shadow:var(--shadow)}
+.sc:hover .si{border-color:var(--bh);background:var(--bgh);box-shadow:var(--shadow-md)}
+.sc.on .si{border-color:var(--ac);background:#fff;box-shadow:0 0 0 3px var(--acd),var(--shadow-md)}
+.snum{font-size:10px;font-family:var(--mo);color:var(--td);margin-bottom:5px}
+.sname{font-size:14px;font-weight:700;color:var(--th);margin-bottom:8px;line-height:1.2}
+.sbadges{display:flex;gap:4px;flex-wrap:wrap;margin-bottom:9px}
+.badge{padding:2px 7px;border-radius:3px;font-size:10px;font-weight:600;letter-spacing:.01em}
+.bns{background:var(--bg);color:var(--tm);border:1px solid var(--b)}
+.bip{background:var(--acd);color:#1d4ed8;border:1px solid var(--acb)}
+.bq{background:var(--grd);color:#15803d;border:1px solid var(--grb)}
+.bdq{background:var(--rdd);color:#b91c1c;border:1px solid var(--rdb)}
+.bsdr{background:var(--ywd);color:var(--yw);border:1px solid var(--ywb)}
+.bae{background:var(--pud);color:#6d28d9;border:1px solid var(--pub)}
+.smean{font-size:11px;color:var(--tm);line-height:1.5;margin-bottom:9px;flex:1}
+.sla{margin-top:4px;padding:4px 8px;border-radius:4px;font-size:10px;font-weight:500;display:flex;align-items:center;gap:4px}
+.sla-w{background:var(--ord);color:var(--or);border:1px solid var(--orb)}
+.sla-g{background:var(--grd);color:var(--gr);border:1px solid var(--grb)}
+.sstats{display:flex;gap:10px;margin-top:auto;padding-top:9px;border-top:1px solid var(--b)}
+.sstat{display:flex;align-items:center;gap:4px;font-size:11px;color:var(--td)}
+.sexits{margin-top:7px;display:flex;gap:4px;flex-wrap:wrap}
+.xb{font-size:10px;padding:2px 6px;border-radius:3px;font-weight:500}
+.xfwd{background:var(--acd);color:#1d4ed8;border:1px solid var(--acb)}
+.xcl{background:var(--rdd);color:#b91c1c;border:1px solid var(--rdb)}
+.xext{background:var(--pud);color:#6d28d9;border:1px solid var(--pub)}
+.sc.ext .si{border-style:dashed;opacity:.7;min-height:auto}
+.sc.ext:hover .si{opacity:1}
+
+/* CLOSED LOST ROW */
+.clrow{display:flex;align-items:flex-start;margin-top:16px;padding-left:14px;gap:14px}
+.clfrom{display:flex;flex-direction:column;gap:4px;padding-top:10px}
+.cfl{font-size:10px;color:var(--td);text-transform:uppercase;letter-spacing:.07em;margin-bottom:3px;font-weight:600}
+.cfc{font-size:11px;color:var(--tm);padding:3px 8px;background:#fff;border:1px solid var(--b);border-radius:4px;box-shadow:var(--shadow)}
+.clarr{display:flex;align-items:center;padding-top:22px;color:var(--rd);opacity:.4;font-size:22px}
+
+/* DETAIL PANEL */
+.det{background:#fff;border:1px solid var(--b);border-radius:var(--rl);margin-top:20px;overflow:hidden;display:none;box-shadow:var(--shadow-md)}
+.det.on{display:block}
+.dethdr{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;border-bottom:1px solid var(--b);background:var(--bga)}
+.dettitle{font-size:15px;font-weight:700;color:var(--th);display:flex;align-items:center;gap:10px}
+.detclose{background:none;border:none;color:var(--td);cursor:pointer;font-size:20px;line-height:1;padding:2px 4px;font-family:var(--fn);border-radius:4px}
+.detclose:hover{background:var(--b);color:var(--th)}
+.dettabs{display:flex;padding:0 18px;border-bottom:1px solid var(--b);gap:2px;background:var(--bga)}
+.dtab{padding:9px 13px;font-size:12px;cursor:pointer;color:var(--tm);border:none;border-bottom:2px solid transparent;margin-bottom:-1px;background:none;font-family:var(--fn);transition:all .14s;font-weight:500}
+.dtab:hover{color:var(--th)}
+.dtab.on{color:var(--ac);border-bottom-color:var(--ac)}
+.detbody{max-height:420px;overflow-y:auto;padding:18px;background:#fff}
+.dsec{display:none}.dsec.on{display:block}
+.dgrid{display:grid;grid-template-columns:1fr 1fr;gap:18px}
+.dblock h4{font-size:10px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;color:var(--td);margin-bottom:10px}
+.dl{list-style:none}
+.dl li{font-size:12px;color:var(--t);padding:5px 0;border-bottom:1px solid var(--b);line-height:1.5;display:flex;gap:7px}
+.dl li:last-child{border-bottom:none}
+.dl li::before{content:'›';color:var(--td);flex-shrink:0}
+.dlc li::before{content:'☐';color:var(--or);font-size:11px}
+.anote{margin-top:12px;padding:10px 12px;border-radius:var(--r);font-size:12px;line-height:1.5}
+.anote-w{background:var(--ord);border:1px solid var(--orb);color:#92400e}
+.anote-b{background:var(--acd);border:1px solid var(--acb);color:#1e40af}
+.anote-g{background:var(--grd);border:1px solid var(--grb);color:#166534}
+.anote-r{background:var(--rdd);border:1px solid var(--rdb);color:#991b1b}
+
+/* Auto items */
+.ai{background:var(--bg);border:1px solid var(--b);border-radius:var(--r);padding:10px 12px;margin-bottom:8px}
+.ai:last-child{margin-bottom:0}
+.ai.ta{border-left:3px solid var(--or)}
+.ai.tn{border-left:3px solid var(--ac)}
+.ai.ts{border-left:3px solid var(--pu)}
+.ai.tt{border-left:3px solid var(--gr)}
+.ai.tc{border-left:3px solid var(--rd)}
+.ai.tr{border-left:3px solid #db2777}
+.ai.tsum{border-left:3px solid #0891b2}
+.atrig{font-size:10px;color:var(--tm);margin-bottom:3px;display:flex;align-items:center;gap:5px}
+.aact{font-size:12px;color:var(--th);line-height:1.4}
+.albl{display:inline-block;padding:1px 5px;border-radius:3px;font-size:9px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;margin-right:4px}
+.la{background:var(--ord);color:#92400e}
+.ln{background:var(--acd);color:#1e40af}
+.ls{background:var(--pud);color:#5b21b6}
+.lt{background:var(--grd);color:#166534}
+.lc{background:var(--rdd);color:#991b1b}
+.lr{background:#fce7f3;color:#9d174d}
+.lsum{background:#cffafe;color:#155e75}
+
+/* Field rows */
+.fi{display:flex;gap:10px;padding:7px 0;border-bottom:1px solid var(--b);align-items:flex-start}
+.fi:last-child{border-bottom:none}
+.fn2{font-family:var(--mo);font-size:11px;color:var(--ac);min-width:165px;flex-shrink:0}
+.ftype{font-size:10px;color:var(--tm);padding:1px 6px;background:var(--bg);border:1px solid var(--b);border-radius:3px;min-width:64px;text-align:center;flex-shrink:0;font-weight:500}
+.fdesc{font-size:12px;color:var(--tm);line-height:1.4}
+.freq{color:var(--rd);font-size:10px;font-weight:700;flex-shrink:0;padding-top:2px}
+
+/* Exit rows */
+.ei{display:flex;align-items:flex-start;gap:10px;padding:9px 12px;border-radius:var(--r);margin-bottom:6px;background:var(--bg);border:1px solid var(--b)}
+.ei:last-child{margin-bottom:0}
+.earr{font-size:17px;flex-shrink:0;padding-top:1px}
+.ename{font-weight:600;font-size:13px;margin-bottom:2px}
+.ecrit{font-size:12px;color:var(--tm);line-height:1.4}
+
+/* CADENCE VIEW */
+.cadwrap{max-width:700px}
+.cadsumrow{display:flex;gap:10px;margin:0 0 18px;flex-wrap:wrap}
+.csitem{display:flex;align-items:center;gap:7px;padding:7px 12px;background:#fff;border:1px solid var(--b);border-radius:var(--r);font-size:12px;box-shadow:var(--shadow)}
+.cadhdr{display:grid;grid-template-columns:64px 110px 1fr;gap:14px;padding:0 0 8px;border-bottom:1px solid var(--bh);margin-bottom:3px}
+.cadhdr span{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--td)}
+.cadrow{display:grid;grid-template-columns:64px 110px 1fr;gap:14px;padding:7px 0;border-bottom:1px solid var(--b);align-items:center}
+.cadrow:last-child{border-bottom:none}
+.cday{font-family:var(--mo);font-size:12px;color:var(--tm)}
+.cch{display:flex;align-items:center;gap:5px;font-size:12px;font-weight:600}
+.ccall{color:var(--gr)}.cemail{color:var(--ac)}.cli{color:var(--pu)}.cauto{color:var(--rd)}
+.cact{font-size:13px;color:var(--t)}
+.cadnote{margin-top:16px;padding:12px 14px;background:var(--ord);border:1px solid var(--orb);border-radius:var(--r);font-size:12px;color:#92400e;line-height:1.6}
+
+/* AUTOMATIONS VIEW */
+.autogrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(310px,1fr));gap:14px}
+.acard{background:#fff;border:1px solid var(--b);border-radius:var(--rl);padding:14px;box-shadow:var(--shadow)}
+.acstage{font-size:10px;text-transform:uppercase;letter-spacing:.08em;color:var(--tm);margin-bottom:10px;display:flex;align-items:center;gap:6px;font-weight:600}
+.acstage::before{content:'';width:6px;height:6px;border-radius:50%;flex-shrink:0}
+.st1::before{background:#a1a1aa}.st2::before{background:var(--ac)}.st3::before{background:#3b82f6}.st4::before{background:#6366f1}.st5::before{background:var(--gr)}.st6::before{background:var(--rd)}
+
+/* PROPERTIES VIEW */
+.ptable{width:100%;border-collapse:collapse}
+.ptable th{text-align:left;font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.08em;color:var(--td);padding:8px 12px;border-bottom:1px solid var(--bh);background:var(--bg)}
+.ptable td{padding:9px 12px;font-size:13px;border-bottom:1px solid var(--b);vertical-align:top;background:#fff}
+.ptable tr:hover td{background:var(--bgh)}
+.pn{font-family:var(--mo);font-size:11px;color:var(--ac)}
+.pobj{display:inline-block;padding:2px 6px;border-radius:3px;font-size:10px;background:var(--acd);color:#1e40af;border:1px solid var(--acb);font-weight:600}
+.ptyp{color:var(--tm);font-size:11px}
+.preq{color:var(--rd);font-size:11px;font-weight:700}
+
+/* FLOWS VIEW */
+.fblock{background:#fff;border:1px solid var(--b);border-radius:var(--rl);padding:18px;margin-bottom:16px;box-shadow:var(--shadow)}
+.fblock h3{font-size:13px;font-weight:700;color:var(--th);margin-bottom:14px;display:flex;align-items:center;gap:8px}
+.fcode{font-family:var(--mo);font-size:12px;line-height:2;white-space:pre-wrap;background:var(--bg);border:1px solid var(--b);border-radius:var(--r);padding:14px}
+.fs{color:var(--th)}.fa{color:var(--tm)}.fau{color:var(--gr)}.fsl{color:var(--pu)}.fw{color:var(--or)}.fsum{color:#0891b2}
+</style>
+</head>
+<body>
+
+<header class="hdr">
+  <div class="hlo">
+    <div class="logo">P</div>
+    <div>
+      <div class="htitle">Lead Pipeline Visualizer</div>
+      <div class="hsub">SDR · Lead Pipeline v2 · HubSpot</div>
+    </div>
+    <div class="hbadge">Build Phase 1</div>
+  </div>
+  <nav class="tabs">
+    <button class="tbtn on" onclick="sv('pipeline',this)">Pipeline</button>
+    <button class="tbtn" onclick="sv('cadence',this)">Cadence</button>
+    <button class="tbtn" onclick="sv('automations',this)">Automations</button>
+    <button class="tbtn" onclick="sv('properties',this)">Properties</button>
+    <button class="tbtn" onclick="sv('flows',this)">Flows</button>
+  </nav>
+</header>
+
+<div class="main">
+
+<!-- ══ PIPELINE VIEW ══════════════════════════════════════════ -->
+<div id="view-pipeline" class="view on">
+  <div class="srcs">
+    <div class="sl">Lead Sources</div>
+    <div class="srcrow">
+      <div class="sch"><span class="sdot do"></span>PhantomBuster</div>
+      <div class="sch"><span class="sdot do"></span>SDR Manual</div>
+      <span class="sarr">→</span>
+      <div class="sch"><span class="sdot di"></span>Website Calculator</div>
+      <div class="sch"><span class="sdot di"></span>Demo Booking</div>
+      <div class="sch"><span class="sdot di"></span>LinkedIn Ads</div>
+      <div class="sch"><span class="sdot di"></span>Organic</div>
+      <span class="sarr">→</span>
+      <div class="sch"><span class="sdot de"></span>Event</div>
+      <span class="sarr">→</span>
+      <div class="sch"><span class="sdot dr"></span>Customer Referral</div>
+      <div class="sch"><span class="sdot dr"></span>Partner Referral</div>
+      <span class="sarr" style="color:var(--ac);font-size:22px;padding:0 4px">→</span>
+      <div class="sch shigh">New Lead</div>
+    </div>
+  </div>
+
+  <div class="sl">Pipeline Stages</div>
+  <div class="pflow">
+    <!-- 1 -->
+    <div class="sc" id="sc-new-lead" onclick="openStage('new-lead')">
+      <div class="si">
+        <div class="snum">Stage 1</div><div class="sname">New Lead</div>
+        <div class="sbadges"><span class="badge bns">Not Started</span><span class="badge bsdr">SDR</span></div>
+        <div class="smean">Lead entered the pipeline. SDR has not yet started outreach.</div>
+        <div class="sla sla-w">⏱ Inbound: 24h · Outbound: 5 days</div>
+        <div class="sexits"><span class="xb xfwd">→ Attempting</span></div>
+        <div class="sstats"><div class="sstat">📋 4 fields</div><div class="sstat">⚡ 2 autos</div></div>
+      </div>
+    </div>
+    <div class="pconn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <!-- 2 -->
+    <div class="sc" id="sc-attempting" onclick="openStage('attempting')">
+      <div class="si">
+        <div class="snum">Stage 2</div><div class="sname">Attempting</div>
+        <div class="sbadges"><span class="badge bip">In Progress</span><span class="badge bsdr">SDR</span></div>
+        <div class="smean">SDR has started outreach. At least one activity logged.</div>
+        <div class="sla sla-w">⏱ Max 21 days before auto-close</div>
+        <div class="sexits"><span class="xb xfwd">→ Connected</span><span class="xb xcl">↓ Closed Lost</span></div>
+        <div class="sstats"><div class="sstat">📋 2 fields</div><div class="sstat">⚡ 2 autos</div></div>
+      </div>
+    </div>
+    <div class="pconn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <!-- 3 -->
+    <div class="sc" id="sc-connected" onclick="openStage('connected')">
+      <div class="si">
+        <div class="snum">Stage 3</div><div class="sname">Connected</div>
+        <div class="sbadges"><span class="badge bip">In Progress</span><span class="badge bsdr">SDR</span></div>
+        <div class="smean">Live conversation — call answered or meaningful reply.</div>
+        <div class="sla sla-w">⏱ Book meeting within 48h</div>
+        <div class="sexits"><span class="xb xfwd">→ Meeting Booked</span><span class="xb xcl">↓ Closed Lost</span></div>
+        <div class="sstats"><div class="sstat">📋 2 fields</div><div class="sstat">⚡ 2 autos</div></div>
+      </div>
+    </div>
+    <div class="pconn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <!-- 4 -->
+    <div class="sc" id="sc-meeting-booked" onclick="openStage('meeting-booked')">
+      <div class="si">
+        <div class="snum">Stage 4</div><div class="sname">Meeting Booked</div>
+        <div class="sbadges"><span class="badge bip">In Progress</span><span class="badge bae">SDR → AE</span></div>
+        <div class="smean">Discovery call scheduled. Two entry paths.</div>
+        <div class="sla sla-w">⏱ Meeting within 14 days of booking</div>
+        <div class="sexits"><span class="xb xfwd">→ SQL</span><span class="xb xcl">↓ Closed Lost</span></div>
+        <div class="sstats"><div class="sstat">📋 1 field</div><div class="sstat">⚡ 5 autos</div></div>
+      </div>
+    </div>
+    <div class="pconn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <!-- 5 -->
+    <div class="sc" id="sc-sql" onclick="openStage('sql')">
+      <div class="si">
+        <div class="snum">Stage 5</div><div class="sname">SQL</div>
+        <div class="sbadges"><span class="badge bq">Qualified</span><span class="badge bae">AE</span></div>
+        <div class="smean">AE confirmed real opportunity. Deal created in Deal Pipeline.</div>
+        <div class="sexits"><span class="xb xext">↗ Deal Pipeline</span></div>
+        <div class="sstats"><div class="sstat">📋 6 SQL criteria</div></div>
+      </div>
+    </div>
+    <div class="pconn"><svg width="14" height="14" viewBox="0 0 16 16" fill="none"><path d="M2 8h10M8 4l4 4-4 4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/></svg></div>
+    <!-- Exit -->
+    <div class="sc ext">
+      <div class="si" style="border-color:var(--pub)">
+        <div class="snum">Exit</div>
+        <div class="sname" style="color:#6d28d9">Deal Pipeline</div>
+        <div class="smean" style="font-size:11px">AE creates Unqualified Deal · lead_source carried · Lead stays in SQL</div>
+        <div class="sexits"><span class="xb xext">↗ Deal Pipeline</span></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Closed Lost -->
+  <div class="clrow">
+    <div class="clfrom">
+      <div class="cfl">Can exit from</div>
+      <div class="cfc">2 · Attempting (auto day 24)</div>
+      <div class="cfc">3 · Connected (disqualified)</div>
+      <div class="cfc">4 · Meeting Booked (AE disqualifies)</div>
+    </div>
+    <div class="clarr">↘</div>
+    <div class="sc" id="sc-closed-lost" onclick="openStage('closed-lost')" style="max-width:280px">
+      <div class="si" style="border-color:var(--rdb);min-height:auto">
+        <div class="snum">Stage 6</div><div class="sname">Closed Lost</div>
+        <div class="sbadges"><span class="badge bdq">Disqualified</span><span class="badge bsdr">SDR</span></div>
+        <div class="smean">Closed permanently. Re-engagement via new Lead record.</div>
+        <div class="sla sla-g">⟳ Recontact Date → new Lead created (Reactivated)</div>
+        <div class="sstats"><div class="sstat">📋 3 fields</div><div class="sstat">⚡ 1 auto</div></div>
+      </div>
+    </div>
+  </div>
+
+  <!-- DETAIL PANEL -->
+  <div class="det" id="det-panel">
+    <div class="dethdr">
+      <div class="dettitle" id="det-title">Stage Detail</div>
+      <button class="detclose" onclick="closeDetail()" aria-label="Close">×</button>
+    </div>
+    <div class="dettabs" id="det-tabs">
+      <button class="dtab on" onclick="sdt('overview',this)">Overview</button>
+      <button class="dtab" onclick="sdt('fields',this)">Required Fields</button>
+      <button class="dtab" onclick="sdt('autos',this)">Automations</button>
+      <button class="dtab" onclick="sdt('exits',this)">Exit Paths</button>
+    </div>
+    <div class="detbody">
+
+      <!-- NEW LEAD -->
+      <div class="dsec on" id="det-new-lead-overview">
+        <div class="dgrid">
+          <div>
+            <div class="dblock"><h4>How a Lead Enters</h4>
+              <ul class="dl"><li>PhantomBuster enrichment run → Lead auto-created</li><li>Inbound form (website calculator, demo booking)</li><li>Event batch import</li><li>SDR manual creation (Sales Navigator)</li></ul>
+            </div>
+          </div>
+          <div>
+            <div class="dblock"><h4>SDR Checklist Before Moving On</h4>
+              <ul class="dl dlc"><li>Check if contacted before (dedup)</li><li>Verify ICP fit (industry, country, company size)</li><li>Set lead_source + lead_source_detail</li><li>Review enriched contact data — correct title?</li><li>Confirm AE assignment</li></ul>
+            </div>
+          </div>
+        </div>
+      </div>
+      <div class="dsec" id="det-new-lead-fields">
+        <div class="fi"><div class="fn2">lead_source</div><div class="ftype">Dropdown</div><div class="fdesc">Mandatory — source category</div><div class="freq">REQ</div></div>
+        <div class="fi"><div class="fn2">lead_type</div><div class="ftype">Dropdown</div><div class="fdesc">Outbound / Inbound / Event / Referral</div><div class="freq">REQ</div></div>
+        <div class="fi"><div class="fn2">Contact associated</div><div class="ftype">Association</div><div class="fdesc">Lead must have a Contact linked before advancing</div><div class="freq">REQ</div></div>
+        <div class="fi"><div class="fn2">ICP confirmed</div><div class="ftype">Checkbox</div><div class="fdesc">SDR verified this company and contact fit ICP criteria</div><div class="freq">REQ</div></div>
+      </div>
+      <div class="dsec" id="det-new-lead-autos">
+        <div class="ai ta"><div class="atrig"><span class="albl la">ALERT</span>Inbound lead &gt;24h in New Lead</div><div class="aact">⚠️ Task to SDR: "New inbound lead needs action — [Company]"</div></div>
+        <div class="ai ta"><div class="atrig"><span class="albl la">ALERT</span>Outbound lead &gt;5 business days in New Lead</div><div class="aact">⚠️ Task to SDR: "Outbound lead not started — [Company]"</div></div>
+      </div>
+      <div class="dsec" id="det-new-lead-exits">
+        <div class="ei"><div class="earr" style="color:var(--ac)">→</div><div><div class="ename" style="color:var(--ac)">2 · Attempting</div><div class="ecrit">First call attempt, email, or LinkedIn touchpoint logged in HubSpot</div></div></div>
+      </div>
+
+      <!-- ATTEMPTING -->
+      <div class="dsec" id="det-attempting-overview">
+        <div class="dgrid">
+          <div>
+            <div class="dblock"><h4>Entry Criteria</h4>
+              <ul class="dl"><li>First call attempt, email, or LinkedIn touchpoint logged in HubSpot</li></ul>
+            </div><br>
+            <div class="dblock"><h4>SDR Activities</h4>
+              <ul class="dl"><li>Run 21-day / 8-touch outreach cadence</li><li>Log every call and email in HubSpot</li><li>Connect on LinkedIn (Day 7)</li></ul>
+            </div>
+          </div>
+          <div>
+            <div class="anote anote-w">⏱ Max 21 days in Attempting. If no connection → auto-close to Closed Lost (No Response). 7-day no-activity alert fires first as a warning.</div>
+          </div>
+        </div>
+      </div>
+      <div class="dsec" id="det-attempting-fields">
+        <div class="fi"><div class="fn2">At least one call logged</div><div class="ftype">Activity</div><div class="fdesc">Required activity before advancing to Connected</div><div class="freq">REQ</div></div>
+        <div class="fi"><div class="fn2">Contact confirmed</div><div class="ftype">Checkbox</div><div class="fdesc">SDR confirmed this is the right contact at the company</div><div class="freq">REQ</div></div>
+      </div>
+      <div class="dsec" id="det-attempting-autos">
+        <div class="ai ta"><div class="atrig"><span class="albl la">ALERT</span>&gt;7 days no activity</div><div class="aact">⚠️ Task to SDR: "No activity in 7 days — [Lead name]"</div></div>
+        <div class="ai tc"><div class="atrig"><span class="albl lc">AUTO-CLOSE</span>&gt;21 days no connection</div><div class="aact">Auto-close to Closed Lost · Reason: No Response · SDR notified via task</div></div>
+      </div>
+      <div class="dsec" id="det-attempting-exits">
+        <div class="ei"><div class="earr" style="color:var(--ac)">→</div><div><div class="ename" style="color:var(--ac)">3 · Connected</div><div class="ecrit">Live conversation happened (call answered or meaningful reply)</div></div></div>
+        <div class="ei"><div class="earr" style="color:var(--rd)">↓</div><div><div class="ename" style="color:var(--rd)">6 · Closed Lost</div><div class="ecrit">21-day cadence exhausted with no response (automatic)</div></div></div>
+      </div>
+
+      <!-- CONNECTED -->
+      <div class="dsec" id="det-connected-overview">
+        <div class="dgrid">
+          <div>
+            <div class="dblock"><h4>SDR Activities</h4>
+              <ul class="dl"><li>Qualify: ICP criteria, pain, compelling event</li><li>Log call via HubSpot Calling → auto-transcription → Claude SDR template (Phase 3)</li><li>Determine: proceed to meeting, or disqualify</li></ul>
+            </div><br>
+            <div class="dblock"><h4>What Is a Compelling Event?</h4>
+              <ul class="dl"><li>Regulatory deadline — must comply by a specific date</li><li>Contract expiry — current solution ends in 6 months</li><li>Market entry — launching new trading territory by a date</li><li>Budget cycle — approved budget, use it this year</li><li>Competitive pressure — rival just launched, must respond</li><li>ESG reporting deadline — board committed to year-end metrics</li></ul>
+            </div>
+          </div>
+          <div>
+            <div class="anote anote-b">📞 Call transcription (Phase 3 build) will auto-populate pain_identified from the transcript. Until then: SDR fills it manually after the call.<br><br>⏱ Target: meeting booked within 48h of connecting. &gt;5 days → alert fires.</div>
+            <div class="anote anote-w" style="margin-top:10px">No compelling event? Close Lost and set a recontact date. An interested contact with no urgency will stall indefinitely.</div>
+          </div>
+        </div>
+      </div>
+      <div class="dsec" id="det-connected-fields">
+        <div class="fi"><div class="fn2">pain_identified</div><div class="ftype">Text</div><div class="fdesc">1–2 sentence synthesis of the pain the contact expressed. Auto-populated from call transcript (Phase 3). Forces SDR to distil the pain into AE-readable format.</div><div class="freq">REQ</div></div>
+        <div class="fi"><div class="fn2">compelling_event_exists</div><div class="ftype">Yes / No</div><div class="fdesc">Is there a specific reason to act within 12 months? If No → consider Closed Lost.</div><div class="freq">REQ</div></div>
+        <div class="anote anote-b" style="margin-top:12px">These two properties do double duty: they gate the stage transition AND give the AE the qualifying context in structured form — visible on the record without reading through notes.</div>
+      </div>
+      <div class="dsec" id="det-connected-autos">
+        <div class="ai ta"><div class="atrig"><span class="albl la">ALERT</span>&gt;5 days in Connected with no meeting booked</div><div class="aact">⚠️ Task to SDR: "No meeting booked — [Lead name]"</div></div>
+        <div class="ai tsum"><div class="atrig"><span class="albl lsum">AUTO-SUMMARY</span>Stage entry (Phase 2 build)</div><div class="aact">🤖 Pulls all lead context + activity timeline → Claude generates "Outreach Summary" note → pinned to Lead record. Covers: what was tried, what connected, qualifying signals.</div></div>
+      </div>
+      <div class="dsec" id="det-connected-exits">
+        <div class="ei"><div class="earr" style="color:var(--ac)">→</div><div><div class="ename" style="color:var(--ac)">4 · Meeting Booked</div><div class="ecrit">Meeting scheduled with AE — pain and compelling event confirmed</div></div></div>
+        <div class="ei"><div class="earr" style="color:var(--rd)">↓</div><div><div class="ename" style="color:var(--rd)">6 · Closed Lost</div><div class="ecrit">Contact disqualified after conversation (wrong person, no ICP fit, no compelling event)</div></div></div>
+      </div>
+
+      <!-- MEETING BOOKED -->
+      <div class="dsec" id="det-meeting-booked-overview">
+        <div class="dgrid">
+          <div>
+            <div class="dblock"><h4>Entry Paths</h4>
+              <ul class="dl"><li>SDR-assisted: SDR books meeting after qualifying connection</li><li>Inbound self-book: Contact books via HubSpot Meetings → stage auto-set, SDR assigned, AE notified</li></ul>
+            </div><br>
+            <div class="dblock"><h4>AE Prep Before the Call</h4>
+              <ul class="dl dlc"><li>Review pain_identified on Lead record</li><li>Review auto-summary note (Phase 2)</li><li>Confirm calendar event + meeting link</li></ul>
+            </div>
+          </div>
+          <div>
+            <div class="anote anote-b">🤖 <strong>Auto-summary fires on stage entry (Phase 2).</strong> Claude pulls full lead history and generates an AE handoff brief. No manual SDR prep note required — the system creates it.<br><br>Replaces the "SDR qualifying notes" manual step entirely.</div>
+          </div>
+        </div>
+      </div>
+      <div class="dsec" id="det-meeting-booked-fields">
+        <div class="fi"><div class="fn2">meeting_link</div><div class="ftype">Text</div><div class="fdesc">HubSpot Meetings / Google Meet URL for the discovery call</div></div>
+        <div class="anote anote-b" style="margin-top:12px">Note: "AE confirmed in calendar" and "SDR prep notes" cannot be enforced as HubSpot stage gates — these are activity types, not properties. The auto-summary (Phase 2) handles the brief automatically. Calendar confirmation is process, not a gate.</div>
+      </div>
+      <div class="dsec" id="det-meeting-booked-autos">
+        <div class="ai tt"><div class="atrig"><span class="albl lt">TASK</span>Stage entry</div><div class="aact">📅 Task to AE: "Discovery call with [Name] at [Company] — [date] — [link]"</div></div>
+        <div class="ai ts"><div class="atrig"><span class="albl ls">SLACK</span>Stage entry</div><div class="aact">Slack to AE: same message as task</div></div>
+        <div class="ai tt"><div class="atrig"><span class="albl lt">TASK</span>Stage entry</div><div class="aact">SDR task: "Prep AE brief for [Company] — review auto-summary note"</div></div>
+        <div class="ai tsum"><div class="atrig"><span class="albl lsum">AUTO-SUMMARY</span>Stage entry (Phase 2 build)</div><div class="aact">🤖 Pulls all lead context + activity timeline → Claude generates "AE Handoff Brief" note → pinned to Lead record. Covers: who they are, pain expressed, compelling event, outreach history, agreed next step.</div></div>
+        <div class="ai ta"><div class="atrig"><span class="albl la">ALERT</span>&gt;14 days no SQL advancement</div><div class="aact">⚠️ Alert to SDR + AE: "Meeting booked but not yet qualified — [Company]"</div></div>
+      </div>
+      <div class="dsec" id="det-meeting-booked-exits">
+        <div class="ei"><div class="earr" style="color:var(--ac)">→</div><div><div class="ename" style="color:var(--ac)">5 · SQL</div><div class="ecrit">AE confirms real opportunity after discovery call — creates Unqualified Deal</div></div></div>
+        <div class="ei"><div class="earr" style="color:var(--rd)">↓</div><div><div class="ename" style="color:var(--rd)">6 · Closed Lost</div><div class="ecrit">AE disqualifies after meeting — no real opportunity</div></div></div>
+      </div>
+
+      <!-- SQL -->
+      <div class="dsec" id="det-sql-overview">
+        <div class="dgrid">
+          <div>
+            <div class="dblock"><h4>SQL Criteria — All Required (needs AE sign-off)</h4>
+              <ul class="dl dlc"><li>Contact is ICP (right company, country, company size)</li><li>Pain clearly identified and articulated</li><li>Compelling event exists within 12 months</li><li>Path to Economic Buyer identified (or EB met)</li><li>Contact is actively engaged (responded, showed interest)</li><li>AE has had at minimum one live conversation</li></ul>
+            </div>
+          </div>
+          <div>
+            <div class="dblock"><h4>What Happens at SQL</h4>
+              <ul class="dl"><li>AE creates Unqualified Deal in Deal Pipeline</li><li>Deal linked to the Lead record</li><li>lead_source + lead_source_detail carried over to Deal (attribution preserved)</li><li>Lead stays in SQL stage — NOT deleted</li></ul>
+            </div>
+            <div class="anote anote-w" style="margin-top:10px">AE edge case: AEs can create a Deal directly without an SDR Lead record — acceptable as long as required Deal fields are filled. Tracked via deal_source = Direct AE.</div>
+          </div>
+        </div>
+      </div>
+      <div class="dsec" id="det-sql-fields">
+        <div style="color:var(--tm);font-size:13px;padding:8px 0">No specific Lead fields required at SQL. AE creates Unqualified Deal in Deal Pipeline with required fields filled there. Lead source attribution is carried over automatically.</div>
+      </div>
+      <div class="dsec" id="det-sql-autos">
+        <div style="color:var(--tm);font-size:13px;padding:8px 0">No automations at SQL stage. AE manually creates Unqualified Deal. Deal Pipeline automations take over. See Flows → AE Handoff.</div>
+      </div>
+      <div class="dsec" id="det-sql-exits">
+        <div class="ei"><div class="earr" style="color:var(--pu)">↗</div><div><div class="ename" style="color:#6d28d9">Deal Pipeline — Unqualified Deal</div><div class="ecrit">AE creates Unqualified Deal linked to this Lead record. Lead source + SDR history carried over.</div></div></div>
+      </div>
+
+      <!-- CLOSED LOST -->
+      <div class="dsec" id="det-closed-lost-overview">
+        <div class="dgrid">
+          <div>
+            <div class="dblock"><h4>Closed Lost Reasons (needs SDR sign-off)</h4>
+              <ul class="dl dlc"><li>Not ICP (wrong industry / country / size)</li><li>Wrong person — can't reach DM</li><li>No response — cadence exhausted</li><li>Not interested — too early (6–12 months)</li><li>Not interested — not a priority</li><li>Do not contact</li><li>Already has a solution (competitor / in-house)</li><li>No compelling event</li><li>Budget unavailable this cycle</li><li>Bad data (wrong contact / company changed)</li></ul>
+            </div>
+          </div>
+          <div>
+            <div class="anote anote-r"><strong>No backwards movement.</strong> Once Closed Lost, it stays closed. The record is permanent history.<br><br>Re-engagement = a NEW Lead record created for the same contact, tagged as Reactivated and linked to this original record.</div>
+            <div class="anote anote-w" style="margin-top:10px">Draft reason list — Christian K + Mo to review and confirm based on their experience in the market.</div>
+          </div>
+        </div>
+      </div>
+      <div class="dsec" id="det-closed-lost-fields">
+        <div class="fi"><div class="fn2">closed_lost_reason</div><div class="ftype">Dropdown</div><div class="fdesc">Required on close — must pick one of 10 reasons</div><div class="freq">REQ</div></div>
+        <div class="fi"><div class="fn2">recontact_date</div><div class="ftype">Date</div><div class="fdesc">Mandatory — when to re-engage (even if 12+ months out). Triggers new Lead creation on date reached.</div><div class="freq">REQ</div></div>
+        <div class="fi"><div class="fn2">recontact_trigger</div><div class="ftype">Text</div><div class="fdesc">Optional context: "when new energy trading regulation passes"</div></div>
+      </div>
+      <div class="dsec" id="det-closed-lost-autos">
+        <div class="ai tr"><div class="atrig"><span class="albl lr">RE-ENGAGE</span>Recontact Date reached</div><div class="aact">🔄 New Lead created for same contact · tagged is_reactivated = true · linked to this Closed Lost record · SDR task fires: "Time to re-engage [Company] — original reason: [reason] — [link]"</div></div>
+      </div>
+      <div class="dsec" id="det-closed-lost-exits">
+        <div class="ei"><div class="earr" style="color:var(--gr)">↗</div><div><div class="ename" style="color:var(--gr)">New Lead — tagged Reactivated</div><div class="ecrit">Recontact Date reached → system creates a fresh Lead record for the same contact, linked to this one. Pipeline restarts from New Lead. This record stays Closed Lost permanently.</div></div></div>
+      </div>
+
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ CADENCE VIEW ═══════════════════════════════════════════ -->
+<div id="view-cadence" class="view">
+  <div class="sl">21-Day Outreach Cadence</div>
+  <div class="cadwrap">
+    <div class="cadsumrow">
+      <div class="csitem"><span style="color:var(--gr)">📞</span>4 calls</div>
+      <div class="csitem"><span style="color:var(--ac)">✉️</span>3 emails</div>
+      <div class="csitem"><span style="color:var(--pu)">🔗</span>1 LinkedIn</div>
+      <div class="csitem">👆 8 total touches</div>
+      <div class="csitem">📅 21 days</div>
+    </div>
+    <div class="cadhdr"><span>Day</span><span>Channel</span><span>Action</span></div>
+    <div class="cadrow"><div class="cday">Day 1</div><div class="cch ccall">📞 Call</div><div class="cact">First attempt — intro, ICP qualify, pain hypothesis</div></div>
+    <div class="cadrow"><div class="cday">Day 1</div><div class="cch cemail">✉️ Email</div><div class="cact">Intro email — personalised to ICP + pain hypothesis</div></div>
+    <div class="cadrow"><div class="cday">Day 3</div><div class="cch ccall">📞 Call</div><div class="cact">Follow-up call attempt</div></div>
+    <div class="cadrow"><div class="cday">Day 5</div><div class="cch cemail">✉️ Email</div><div class="cact">Value prop email — energy savings, market share angle</div></div>
+    <div class="cadrow"><div class="cday">Day 7</div><div class="cch cli">🔗 LinkedIn</div><div class="cact">Connection request + short personalised note</div></div>
+    <div class="cadrow"><div class="cday">Day 10</div><div class="cch ccall">📞 Call</div><div class="cact">Third call attempt — reference previous touches</div></div>
+    <div class="cadrow"><div class="cday">Day 14</div><div class="cch cemail">✉️ Email</div><div class="cact">Case study / social proof — relevant customer story</div></div>
+    <div class="cadrow"><div class="cday">Day 17</div><div class="cch ccall">📞 Call</div><div class="cact">Final call attempt</div></div>
+    <div class="cadrow"><div class="cday">Day 21</div><div class="cch cemail">✉️ Email</div><div class="cact">Breakup email — "closing your file, reach out when timing is right"</div></div>
+    <div class="cadrow"><div class="cday">Day 24</div><div class="cch cauto">⚡ Auto</div><div class="cact" style="color:var(--rd);font-weight:500">Auto-close to Closed Lost — No Response (if still no reply)</div></div>
+    <div class="cadnote">⚠️ <strong>Needs SDR sign-off.</strong> Best-practice B2B enterprise (4 calls, 3 emails, 1 LinkedIn over 21 days). Enterprise energy is relationship-heavy — confirm with Christian K + Mo.<br><br>⚠️ <strong>Seat constraint:</strong> HubSpot email sequences require Sales Hub Professional (~€90/user/month). If SDRs are on Core seats, cadence runs as Zapier-triggered manual tasks. Decision pending from Sasu.</div>
+  </div>
+</div>
+
+
+<!-- ══ AUTOMATIONS VIEW ═══════════════════════════════════════ -->
+<div id="view-automations" class="view">
+  <div class="sl">All Automations by Stage</div>
+  <div class="autogrid">
+    <div class="acard">
+      <div class="acstage st1">Stage 1 — New Lead</div>
+      <div class="ai ta"><div class="atrig"><span class="albl la">ALERT</span>Inbound lead &gt;24h in stage</div><div class="aact">⚠️ Task to SDR: "New inbound lead needs action — [Company]"</div></div>
+      <div class="ai ta"><div class="atrig"><span class="albl la">ALERT</span>Outbound lead &gt;5 business days</div><div class="aact">⚠️ Task to SDR: "Outbound lead not started — [Company]"</div></div>
+    </div>
+    <div class="acard">
+      <div class="acstage st2">Stage 2 — Attempting</div>
+      <div class="ai ta"><div class="atrig"><span class="albl la">ALERT</span>&gt;7 days no activity</div><div class="aact">⚠️ Task to SDR: "No activity in 7 days — [Lead name]"</div></div>
+      <div class="ai tc"><div class="atrig"><span class="albl lc">AUTO-CLOSE</span>&gt;21 days no connection</div><div class="aact">Auto-close to Closed Lost · Reason: No Response · SDR task notification</div></div>
+    </div>
+    <div class="acard">
+      <div class="acstage st3">Stage 3 — Connected</div>
+      <div class="ai ta"><div class="atrig"><span class="albl la">ALERT</span>&gt;5 days no meeting booked</div><div class="aact">⚠️ Task to SDR: "No meeting booked — [Lead name]"</div></div>
+      <div class="ai tsum"><div class="atrig"><span class="albl lsum">AUTO-SUMMARY</span>Stage entry · Phase 2</div><div class="aact">🤖 Claude generates "Outreach Summary" note — what was tried, what connected, qualifying signals</div></div>
+    </div>
+    <div class="acard">
+      <div class="acstage st4">Stage 4 — Meeting Booked</div>
+      <div class="ai tt"><div class="atrig"><span class="albl lt">TASK</span>Stage entry</div><div class="aact">📅 Task to AE: "Discovery call with [Name] at [Company] — [date] — [link]"</div></div>
+      <div class="ai ts"><div class="atrig"><span class="albl ls">SLACK</span>Stage entry</div><div class="aact">Slack to AE: same message as task above</div></div>
+      <div class="ai tt"><div class="atrig"><span class="albl lt">TASK</span>Stage entry</div><div class="aact">SDR task: "Prep AE brief for [Company] — review auto-summary note"</div></div>
+      <div class="ai tsum"><div class="atrig"><span class="albl lsum">AUTO-SUMMARY</span>Stage entry · Phase 2</div><div class="aact">🤖 Claude generates "AE Handoff Brief" — who they are, pain, compelling event, outreach history, next step</div></div>
+      <div class="ai ta"><div class="atrig"><span class="albl la">ALERT</span>&gt;14 days no SQL advancement</div><div class="aact">⚠️ Alert to SDR + AE: meeting booked but not yet qualified</div></div>
+    </div>
+    <div class="acard">
+      <div class="acstage st5">Stage 5 — SQL</div>
+      <div style="color:var(--td);font-size:12px;padding:6px 0">No automations at SQL. AE manually creates Unqualified Deal. Deal Pipeline automations take over.</div>
+    </div>
+    <div class="acard">
+      <div class="acstage st6">Stage 6 — Closed Lost</div>
+      <div class="ai tr"><div class="atrig"><span class="albl lr">RE-ENGAGE</span>Recontact Date reached</div><div class="aact">🔄 New Lead created · tagged Reactivated · linked to original · SDR task with full context</div></div>
+    </div>
+  </div>
+</div>
+
+
+<!-- ══ PROPERTIES VIEW ═══════════════════════════════════════ -->
+<div id="view-properties" class="view">
+  <div class="sl">HubSpot Properties Needed</div>
+  <table class="ptable">
+    <thead><tr><th>Property</th><th>Object</th><th>Type</th><th>Stage Required</th><th>Purpose</th></tr></thead>
+    <tbody>
+      <tr><td class="pn">lead_source</td><td><span class="pobj">Lead</span></td><td class="ptyp">Dropdown</td><td><span class="preq">New Lead →</span></td><td>Source category (PhantomBuster / SDR Manual / Website Calculator / Demo Booking / LinkedIn Ads / Organic / Event / Referral)</td></tr>
+      <tr><td class="pn">lead_source_detail</td><td><span class="pobj">Lead</span></td><td class="ptyp">Text</td><td><span class="preq">New Lead →</span></td><td>Granular: event name, LinkedIn campaign name, e.g. "Electrify Europe 2026"</td></tr>
+      <tr><td class="pn">lead_type</td><td><span class="pobj">Lead</span></td><td class="ptyp">Dropdown</td><td><span class="preq">New Lead →</span></td><td>Outbound / Inbound / Event / Referral</td></tr>
+      <tr><td class="pn">assigned_sdr</td><td><span class="pobj">Lead</span></td><td class="ptyp">Owner</td><td>New Lead</td><td>SDR responsible. Pre-assigned via Company record.</td></tr>
+      <tr><td class="pn">assigned_ae</td><td><span class="pobj">Lead</span></td><td class="ptyp">Owner</td><td>New Lead</td><td>Default AE for this lead. Can be reassigned.</td></tr>
+      <tr><td class="pn">pain_identified</td><td><span class="pobj">Lead</span></td><td class="ptyp">Text</td><td><span class="preq">Connected →</span></td><td>1–2 sentence synthesis of pain expressed. Auto-populated from call transcript (Phase 3). Also acts as AE handoff summary field.</td></tr>
+      <tr><td class="pn">compelling_event_exists</td><td><span class="pobj">Lead</span></td><td class="ptyp">Yes / No</td><td><span class="preq">Connected →</span></td><td>Is there a specific reason to act within 12 months? Binary gate — No = consider Closed Lost.</td></tr>
+      <tr><td class="pn">meeting_link</td><td><span class="pobj">Lead</span></td><td class="ptyp">Text</td><td>Meeting Booked</td><td>HubSpot Meetings / Google Meet URL for the discovery call</td></tr>
+      <tr><td class="pn">closed_lost_reason</td><td><span class="pobj">Lead</span></td><td class="ptyp">Dropdown</td><td><span class="preq">Closed Lost</span></td><td>Required on close. 10 reasons. Needs SDR sign-off on list.</td></tr>
+      <tr><td class="pn">recontact_date</td><td><span class="pobj">Lead</span></td><td class="ptyp">Date</td><td><span class="preq">Closed Lost</span></td><td>Mandatory — triggers new Reactivated Lead creation on this date.</td></tr>
+      <tr><td class="pn">recontact_trigger</td><td><span class="pobj">Lead</span></td><td class="ptyp">Text</td><td>Closed Lost</td><td>Optional: context for re-engagement (e.g. "when new energy trading regulation passes")</td></tr>
+      <tr><td class="pn">is_reactivated</td><td><span class="pobj">Lead</span></td><td class="ptyp">Checkbox</td><td>New (Reactivated)</td><td>Marks this as a reactivated lead. Original Closed Lost record linked via association.</td></tr>
+      <tr><td class="pn">sdr_status</td><td><span class="pobj">Company</span></td><td class="ptyp">Dropdown</td><td>Company level</td><td>Account-level SDR progress: Not Started / In Progress / Connected / Qualified / Disqualified / Re-engage</td></tr>
+      <tr><td class="pn">assigned_sdr</td><td><span class="pobj">Company</span></td><td class="ptyp">Owner</td><td>Company level</td><td>Pre-assigned SDR for this account. Inherited by leads from this company.</td></tr>
+    </tbody>
+  </table>
+  <div style="margin-top:14px;padding:12px 14px;background:#fff;border:1px solid var(--b);border-radius:var(--r);font-size:12px;color:var(--tm);line-height:1.6;box-shadow:var(--shadow)">
+    <strong style="color:var(--th)">Build order:</strong> lead_source + lead_type + lead_source_detail (day 1 — attribution critical) → pain_identified + compelling_event_exists → closed_lost_reason + recontact_date + is_reactivated → sdr_status on Company.
+  </div>
+</div>
+
+
+<!-- ══ FLOWS VIEW ════════════════════════════════════════════ -->
+<div id="view-flows" class="view">
+  <div class="sl">Key Automation Flows</div>
+
+  <div class="fblock">
+    <h3>🤖 Stage Transition Auto-Summary (Phase 2 build)</h3>
+    <div class="fcode">
+<span class="fs">SDR moves lead to new stage</span>
+        ↓
+<span class="fau">HubSpot workflow fires on stage change</span>
+<span class="fa">  → Webhook to Zapier / Make</span>
+        ↓
+<span class="fsum">Fetch from HubSpot: contact + company + lead properties + full activity timeline</span>
+        ↓
+<span class="fsum">Send to Claude API with stage-specific prompt template:</span>
+<span class="fa">  Connected entry    → "Outreach Summary: what was tried, what connected, qualifying signals"</span>
+<span class="fa">  Meeting Booked     → "AE Handoff Brief: who they are, pain, compelling event, history, next step"</span>
+<span class="fa">  SQL entry          → "Full qualification summary: all SUGAARR criteria + SDR history"</span>
+<span class="fa">  Closed Lost        → "Closure summary: what was tried, why it closed, re-engagement context"</span>
+        ↓
+<span class="fau">Structured note created on Lead record via HubSpot API</span>
+<span class="fsl">Slack to SDR / AE: "Summary note ready for [Company] → [link]"</span>
+    </div>
+  </div>
+
+  <div class="fblock">
+    <h3>🔄 Re-engagement Flow (Closed Lost → New Lead)</h3>
+    <div class="fcode">
+<span class="fs">Lead closed as Closed Lost · recontact_date set</span>
+        ↓
+<span class="fs">Time passes... recontact_date is reached</span>
+        ↓
+<span class="fau">Workflow fires: NEW Lead record created for same contact</span>
+<span class="fa">  → is_reactivated = true</span>
+<span class="fa">  → Associated to original Closed Lost Lead record</span>
+<span class="fa">  → Stage = New Lead</span>
+<span class="fa">  → Original close reason surfaced in SDR task</span>
+        ↓
+<span class="fau">SDR task: "🔄 Re-engage [Company] — closed [date], reason: [reason] — [link to original]"</span>
+<span class="fw">  Original Closed Lost record stays closed permanently — no backwards movement</span>
+    </div>
+  </div>
+
+  <div class="fblock">
+    <h3>🤖 PhantomBuster Enrichment Flow</h3>
+    <div class="fcode">
+<span class="fs">Thomas runs PhantomBuster LinkedIn scraper</span>
+<span class="fa">  → Input: HubSpot Company records (~200 ICP utilities)</span>
+<span class="fa">  → Target roles: Innovation Manager / Head of Product / Trading Lead / Energy Manager / Head of Energy Trading</span>
+        ↓
+<span class="fau">Two outputs: ICP List (enriched company data) + Persona List (contacts ranked by role fit)</span>
+        ↓
+<span class="fau">HubSpot integration: Contact created / enriched → Lead auto-created → Stage = New Lead</span>
+<span class="fau">SDR task: "New enriched lead — [Name] at [Company] — [LinkedIn link]"</span>
+    </div>
+  </div>
+
+  <div class="fblock">
+    <h3>🌐 Inbound Lead Flow</h3>
+    <div class="fcode">
+<span class="fs">Contact fills website calculator OR books demo via HubSpot Meetings</span>
+        ↓
+<span class="fau">Lead auto-created:</span>
+<span class="fa">  Website Calculator → Stage = New Lead,      lead_source = Inbound — Website Calculator</span>
+<span class="fa">  Demo Booking       → Stage = Meeting Booked, lead_source = Inbound — Demo Booking</span>
+        ↓
+<span class="fau">Default SDR assigned · SDR task: "🔥 Inbound lead — respond within 24h — [link]"</span>
+<span class="fsl">Slack: same message</span>
+<span class="fw">  ⚠️ To confirm: which AE gets default inbound assignment?</span>
+    </div>
+  </div>
+
+  <div class="fblock">
+    <h3>🤝 AE Handoff (Meeting Booked → SQL)</h3>
+    <div class="fcode">
+<span class="fs">Lead reaches Meeting Booked</span>
+        ↓
+<span class="fau">Task to AE: "📅 [Name] at [Company] — discovery call [date] — [link]"</span>
+<span class="fsl">Slack to AE: same · Auto-summary note generated (Phase 2)</span>
+        ↓
+<span class="fs">AE reviews pain_identified + auto-summary before the call</span>
+        ↓
+<span class="fau">AE creates Unqualified Deal in Deal Pipeline</span>
+<span class="fa">  → lead_source + lead_source_detail carried to Deal · Lead stays in SQL</span>
+    </div>
+  </div>
+</div>
+
+</div>
+
+<script>
+var curStage=null,curTab='overview';
+var stageNames={'new-lead':'Stage 1 — New Lead','attempting':'Stage 2 — Attempting','connected':'Stage 3 — Connected','meeting-booked':'Stage 4 — Meeting Booked','sql':'Stage 5 — SQL','closed-lost':'Stage 6 — Closed Lost'};
+var stageBadgeCls={'new-lead':'bns','attempting':'bip','connected':'bip','meeting-booked':'bip','sql':'bq','closed-lost':'bdq'};
+var stageBadgeTxt={'new-lead':'Not Started','attempting':'In Progress','connected':'In Progress','meeting-booked':'In Progress','sql':'Qualified','closed-lost':'Disqualified'};
+
+function sv(view,btn){
+  document.querySelectorAll('.view').forEach(function(v){v.classList.remove('on')});
+  document.querySelectorAll('.tbtn').forEach(function(b){b.classList.remove('on')});
+  document.getElementById('view-'+view).classList.add('on');
+  btn.classList.add('on');
+}
+
+function openStage(id){
+  document.querySelectorAll('.sc').forEach(function(c){c.classList.remove('on')});
+  var card=document.getElementById('sc-'+id);
+  if(card)card.classList.add('on');
+  curStage=id;
+  var title=document.getElementById('det-title');
+  title.textContent='';
+  title.appendChild(document.createTextNode(stageNames[id]||id));
+  title.appendChild(document.createTextNode(' '));
+  var b=document.createElement('span');
+  b.className='badge '+(stageBadgeCls[id]||'bns');
+  b.textContent=stageBadgeTxt[id]||'';
+  title.appendChild(b);
+  showSec(id,curTab);
+  document.getElementById('det-panel').classList.add('on');
+  setTimeout(function(){document.getElementById('det-panel').scrollIntoView({behavior:'smooth',block:'nearest'})},80);
+}
+
+function closeDetail(){
+  document.getElementById('det-panel').classList.remove('on');
+  document.querySelectorAll('.sc').forEach(function(c){c.classList.remove('on')});
+  curStage=null;
+}
+
+function sdt(tab,btn){
+  curTab=tab;
+  document.querySelectorAll('.dtab').forEach(function(t){t.classList.remove('on')});
+  btn.classList.add('on');
+  if(curStage)showSec(curStage,tab);
+}
+
+function showSec(stage,tab){
+  document.querySelectorAll('.dsec').forEach(function(s){s.classList.remove('on')});
+  var sec=document.getElementById('det-'+stage+'-'+tab);
+  if(sec)sec.classList.add('on');
+}
+</script>
+</body>
+</html>
